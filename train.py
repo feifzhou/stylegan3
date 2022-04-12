@@ -135,7 +135,7 @@ def parse_comma_separated_list(s):
 @click.option('--cond',         help='Train conditional model', metavar='BOOL',                 type=bool, default=False, show_default=True)
 @click.option('--mirror',       help='Enable dataset x-flips', metavar='BOOL',                  type=bool, default=False, show_default=True)
 @click.option('--aug',          help='Augmentation mode',                                       type=click.Choice(['noaug', 'ada', 'fixed']), default='ada', show_default=True)
-@click.option('--resume',       help='Resume from given network pickle', metavar='[PATH|URL]',  type=str)
+@click.option('--resume',       help='Resume from given network pickle', metavar='[PATH|URL]',  type=str, default='.')
 @click.option('--freezed',      help='Freeze first layers of D', metavar='INT',                 type=click.IntRange(min=0), default=0, show_default=True)
 
 # Misc hyperparameters.
@@ -259,6 +259,13 @@ def main(**kwargs):
             c.augment_p = opts.p
 
     # Resume.
+    if opts.resume == '.':
+        import glob
+        list_of_files = glob.glob(f'{opts.outdir}/network*.pkl')
+        if list_of_files:
+            opts.resume = max(list_of_files, key=os.path.getctime)
+        else:
+            opts.resume = None
     if opts.resume is not None:
         c.resume_pkl = opts.resume
         c.ada_kimg = 100 # Make ADA react faster at the beginning.
